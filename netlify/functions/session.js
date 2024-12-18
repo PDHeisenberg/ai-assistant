@@ -1,12 +1,34 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
   // Only allow POST
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { 
+      statusCode: 405, 
+      headers,
+      body: JSON.stringify({ error: "Method Not Allowed" })
+    };
   }
 
   try {
+    console.log("Creating session with OpenAI...");
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
@@ -20,18 +42,26 @@ exports.handler = async function(event, context) {
     });
 
     const data = await response.json();
+    console.log("OpenAI response:", data);
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to create session");
+    }
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers,
       body: JSON.stringify(data)
     };
   } catch (error) {
+    console.error("Session creation error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      headers,
+      body: JSON.stringify({ 
+        error: error.message,
+        details: "Failed to create OpenAI session"
+      })
     };
   }
 }; 

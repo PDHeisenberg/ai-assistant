@@ -358,16 +358,32 @@ async function initWebRTC() {
         console.log("Initializing WebRTC connection...");
         
         const tokenResponse = await fetch("/.netlify/functions/session", {
-            method: "POST"
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
+
+        const responseText = await tokenResponse.text();
+        console.log("Raw session response:", responseText);
+
         if (!tokenResponse.ok) {
-            const error = await tokenResponse.text();
-            throw new Error(`Failed to get session token: ${error}`);
+            throw new Error(`Failed to get session token: ${responseText}`);
         }
         
-        const data = await tokenResponse.json();
-        if (!data.client_secret?.value) {
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("Failed to parse session response:", e);
             throw new Error("Invalid session response format");
+        }
+
+        console.log("Parsed session data:", data);
+        
+        if (!data.client_secret?.value) {
+            console.error("Invalid session data:", data);
+            throw new Error("Invalid session response format - missing client_secret");
         }
         
         const EPHEMERAL_KEY = data.client_secret.value;
@@ -381,6 +397,15 @@ async function initWebRTC() {
         };
         peerConnection = new RTCPeerConnection(configuration);
         console.log("Peer connection created");
+
+        // Add ICE connection state logging
+        peerConnection.oniceconnectionstatechange = () => {
+            console.log("ICE connection state:", peerConnection.iceConnectionState);
+        };
+
+        peerConnection.onicecandidate = event => {
+            console.log("ICE candidate:", event.candidate);
+        };
 
         // Set up audio element for model's voice
         const audioEl = document.createElement("audio");
@@ -401,6 +426,7 @@ async function initWebRTC() {
             });
             stream.getTracks().forEach(track => {
                 peerConnection.addTrack(track, stream);
+                console.log("Added audio track:", track.label);
             });
             console.log("Microphone access granted");
         } catch (micError) {
@@ -411,8 +437,8 @@ async function initWebRTC() {
 
         // Set up data channel
         dataChannel = peerConnection.createDataChannel("oai-events");
-        dataChannel.addEventListener("message", handleServerMessage);
-        dataChannel.addEventListener("open", () => {
+        
+        dataChannel.onopen = () => {
             console.log("Data channel opened");
             
             // Update session with instructions and tools
@@ -433,19 +459,23 @@ async function initWebRTC() {
                     instructions: "Greet the user with your introduction message as specified in the system instructions."
                 }
             });
-        });
+        };
         
-        dataChannel.addEventListener("error", (error) => {
+        dataChannel.onclose = () => console.log("Data channel closed");
+        dataChannel.onerror = (error) => {
             console.error("Data channel error:", error);
             showError();
-        });
+        };
+        dataChannel.onmessage = handleServerMessage;
 
         // Create and set local description
+        console.log("Creating offer...");
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        console.log("Local description set");
+        console.log("Local description set:", offer.sdp);
 
         // Connect to OpenAI's Realtime API
+        console.log("Connecting to OpenAI Realtime API...");
         const baseUrl = "https://api.openai.com/v1/realtime";
         const model = "gpt-4o-realtime-preview-2024-12-17";
         const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
@@ -459,12 +489,16 @@ async function initWebRTC() {
 
         if (!sdpResponse.ok) {
             const error = await sdpResponse.text();
+            console.error("OpenAI SDP response error:", error);
             throw new Error(`Failed to connect to OpenAI: ${error}`);
         }
 
+        const sdpAnswer = await sdpResponse.text();
+        console.log("Received SDP answer");
+
         const answer = {
             type: "answer",
-            sdp: await sdpResponse.text(),
+            sdp: sdpAnswer,
         };
         await peerConnection.setRemoteDescription(answer);
         console.log("Remote description set");
