@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+        
+        html {
+            height: -webkit-fill-available;
+        }
+        
+        .blob-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 20px;
+        }
+        
+        #blob {
+            width: min(120px, 30vw);
+            height: min(120px, 30vw);
+            background: #9333ea;
+            border-radius: 50%;
+            filter: blur(8px);
+            transition: transform 0.3s ease;
+        }
+        
+        .controls {
+            width: 100%;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            position: fixed;
+            bottom: 0;
+        }
+        
+        .btn {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .btn svg {
+            width: min(24px, 6vw);
+            height: min(24px, 6vw);
+            stroke: black;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="blob-container">
+        <div id="blob" class="floating"></div>
+    </div>
+    
+    <div class="controls">
+        <button id="muteBtn" class="btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                <path d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+            </svg>
+        </button>
+        <button id="closeBtn" class="btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html> 
