@@ -22,7 +22,7 @@ A voice-based AI assistant that can discuss my work experience, take messages, a
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-assistant.git
+git clone https://github.com/parthdhawan/ai-assistant.git
 cd ai-assistant
 ```
 

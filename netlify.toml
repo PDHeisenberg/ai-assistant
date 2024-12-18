@@ -1,10 +1,10 @@
 [build]
-  command = "pip install -r requirements.txt"
+  command = "cd netlify/functions && npm install"
   publish = "static"
   functions = "netlify/functions"
 
 [build.environment]
-  PYTHON_VERSION = "3.9"
+  NODE_VERSION = "16"
 
 [[redirects]]
   from = "/api/*"

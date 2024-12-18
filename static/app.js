@@ -239,7 +239,7 @@ async function sendEmailWithMessages() {
     };
     
     try {
-        const response = await fetch("/send-email", {
+        const response = await fetch("/.netlify/functions/send-email", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -357,7 +357,7 @@ async function initWebRTC() {
     try {
         console.log("Initializing WebRTC connection...");
         
-        const tokenResponse = await fetch("/session", {
+        const tokenResponse = await fetch("/.netlify/functions/session", {
             method: "POST"
         });
         if (!tokenResponse.ok) {

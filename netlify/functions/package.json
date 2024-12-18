@@ -1,0 +1,9 @@
+{
+  "name": "ai-assistant-functions",
+  "version": "1.0.0",
+  "description": "Netlify functions for AI Assistant",
+  "dependencies": {
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.9.1"
+  }
+} 
