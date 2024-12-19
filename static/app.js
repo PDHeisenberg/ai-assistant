@@ -740,9 +740,15 @@ function sendMessage(message) {
 // Initialize microphone access
 async function initializeMicrophone() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
         console.log('Microphone access granted');
-        setupWebRTC(stream);
+        initWebRTCWithRetry();
     } catch (error) {
         console.error('Error accessing microphone:', error);
         alert('Please allow microphone access to use the assistant.');
@@ -772,18 +778,22 @@ closeBtn.addEventListener('click', () => {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing assistant...');
-    initializeMicrophone();
-    // Initialize Lottie player
-    blob.addEventListener('load', () => {
-        console.log("Lottie animation loaded");
-        isLottieReady = true;
-        // Start in paused state
-        blob.stop();
-    });
     
-    blob.addEventListener('error', (error) => {
-        console.error("Error loading Lottie animation:", error);
-    });
+    // Initialize Lottie player
+    if (blob) {
+        blob.addEventListener('load', () => {
+            console.log("Lottie animation loaded");
+            isLottieReady = true;
+            // Start in paused state
+            blob.stop();
+        });
+        
+        blob.addEventListener('error', (error) => {
+            console.error("Error loading Lottie animation:", error);
+        });
+    } else {
+        console.error("Blob element not found");
+    }
     
     // Start WebRTC connection
     initWebRTCWithRetry();
