@@ -357,6 +357,24 @@ async function initWebRTC() {
     try {
         console.log("Initializing WebRTC connection...");
         
+        // First check if we have microphone permission
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            console.log("Microphone access granted");
+        } catch (micError) {
+            console.error("Microphone access denied:", micError);
+            showError();
+            throw new Error("Please grant microphone access to use the voice assistant");
+        }
+
+        // Get session token from Netlify function
+        console.log("Requesting session token...");
         const tokenResponse = await fetch("/.netlify/functions/session", {
             method: "POST",
             headers: {
@@ -368,7 +386,8 @@ async function initWebRTC() {
         console.log("Raw session response:", responseText);
 
         if (!tokenResponse.ok) {
-            throw new Error(`Failed to get session token: ${responseText}`);
+            console.error("Session token error:", responseText);
+            throw new Error(`Failed to get session token. Please check if the API key is configured correctly in Netlify.`);
         }
         
         let data;
@@ -376,14 +395,14 @@ async function initWebRTC() {
             data = JSON.parse(responseText);
         } catch (e) {
             console.error("Failed to parse session response:", e);
-            throw new Error("Invalid session response format");
+            throw new Error("Invalid response from server. Please try again.");
         }
 
         console.log("Parsed session data:", data);
         
         if (!data.client_secret?.value) {
             console.error("Invalid session data:", data);
-            throw new Error("Invalid session response format - missing client_secret");
+            throw new Error("Invalid session configuration. Please check Netlify environment variables.");
         }
         
         const EPHEMERAL_KEY = data.client_secret.value;

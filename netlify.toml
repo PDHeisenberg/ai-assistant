@@ -7,7 +7,7 @@
   NODE_VERSION = "16"
 
 [[redirects]]
-  from = "/api/*"
+  from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
@@ -15,8 +15,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+  force = true
 
 [dev]
-  command = "python main.py"
-  port = 8000
-  publish = "static" 
+  publish = "static"
+  functions = "netlify/functions"
+  targetPort = 8000
