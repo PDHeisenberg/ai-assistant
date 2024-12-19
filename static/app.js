@@ -327,33 +327,54 @@ function animateEyes(state) {
     
     switch(state) {
         case 'processing':
-            // Thinking expression - eyes looking up
+            // Processing expression - eyes pulsing
             anime({
                 targets: [leftEye, rightEye],
-                translateY: -4,
-                duration: 300,
-                easing: 'easeOutQuad'
+                scale: [1, 1.2],
+                opacity: [1, 0.7],
+                duration: 600,
+                direction: 'alternate',
+                loop: true,
+                easing: 'easeInOutSine'
+            });
+            // Animate the white dots
+            anime({
+                targets: ['.eye-left::after', '.eye-right::after'],
+                scale: [0.5, 0.3],
+                opacity: [1, 0.5],
+                duration: 600,
+                direction: 'alternate',
+                loop: true,
+                easing: 'easeInOutSine'
             });
             break;
             
         case 'speaking':
-            // Happy expression - curved eyes
+            // Speaking expression - gentle bounce
             anime({
                 targets: [leftEye, rightEye],
-                height: 12,
-                translateY: 0,
-                borderRadius: '50%',
-                duration: 300,
-                easing: 'easeOutQuad'
+                translateY: [0, -2],
+                duration: 1000,
+                direction: 'alternate',
+                loop: true,
+                easing: 'easeInOutQuad'
+            });
+            // Animate the white dots
+            anime({
+                targets: ['.eye-left::after', '.eye-right::after'],
+                scale: [0.5, 0.6],
+                duration: 1000,
+                direction: 'alternate',
+                loop: true,
+                easing: 'easeInOutQuad'
             });
             break;
             
         case 'error':
-            // Sad expression - eyes looking down
+            // Error expression - shrink pupils
             anime({
-                targets: [leftEye, rightEye],
-                translateY: 4,
-                height: 14,
+                targets: ['.eye-left::after', '.eye-right::after'],
+                scale: 0.2,
                 duration: 300,
                 easing: 'easeOutQuad'
             });
@@ -363,9 +384,17 @@ function animateEyes(state) {
             // Normal state - reset eyes
             anime({
                 targets: [leftEye, rightEye],
+                scale: 1,
+                opacity: 1,
                 translateY: 0,
-                height: 16,
-                borderRadius: '50%',
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            // Reset white dots
+            anime({
+                targets: ['.eye-left::after', '.eye-right::after'],
+                scale: 0.5,
+                opacity: 1,
                 duration: 300,
                 easing: 'easeOutQuad'
             });
