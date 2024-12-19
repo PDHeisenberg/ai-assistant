@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Assistant</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdn.lottielab.com/s/lottie-player@1.x/player-web.min.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            background: white;
+            background: #1a1a1a;
             font-family: system-ui, -apple-system, sans-serif;
             overflow: hidden;
         }
@@ -37,6 +37,9 @@
             width: 100%;
             padding: 20px;
             position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin: 20px;
         }
         
         lottie-player {
@@ -48,6 +51,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            z-index: 10;
         }
         
         .controls {
@@ -77,7 +81,7 @@
         .btn svg {
             width: min(24px, 6vw);
             height: min(24px, 6vw);
-            stroke: black;
+            stroke: white;
         }
     </style>
 </head>
@@ -88,6 +92,7 @@
             src="/static/blob.json" 
             background="transparent"
             speed="1"
+            style="filter: brightness(1.2) contrast(1.2);"
             loop
             autoplay
             renderer="svg">
@@ -113,11 +118,29 @@
             if (blob) {
                 blob.addEventListener('error', (e) => {
                     console.error('Error loading animation:', e);
+                    document.querySelector('.blob-container').style.background = 'red';
                 });
                 
                 blob.addEventListener('ready', () => {
                     console.log('Animation loaded successfully');
+                    blob.play();
                 });
+
+                blob.addEventListener('load', () => {
+                    console.log('Animation loaded');
+                });
+
+                // Force play after a short delay
+                setTimeout(() => {
+                    if (blob.getLottie) {
+                        const animation = blob.getLottie();
+                        if (animation) {
+                            animation.play();
+                        }
+                    }
+                }, 1000);
+            } else {
+                console.error('Blob element not found');
             }
         });
     </script>
