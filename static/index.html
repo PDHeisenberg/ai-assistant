@@ -51,8 +51,13 @@
             z-index: 10;
         }
         
-        /* Hide specific matrix transform */
-        lottie-player svg g[transform*="1.229508161544799"] {
+        /* Hide watermark */
+        lottie-player svg g[transform*="matrix(1.229508161544799"] {
+            display: none !important;
+        }
+        
+        /* Hide specific text path */
+        lottie-player svg path[d*="M351.34320068359375"] {
             display: none !important;
         }
         
