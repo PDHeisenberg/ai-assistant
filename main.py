@@ -84,17 +84,17 @@ async def startup_event():
             exit(1)
         print(colored("✓ API key found", "green"))
         
-        # Test email configuration
-        print(colored("Testing email configuration...", "yellow"))
-        test_result = send_email(
-            EMAIL_CONFIG["YOUR_EMAIL"],
-            "AI Assistant Test Email",
-            "Your AI Assistant email configuration is working correctly."
-        )
-        if test_result:
-            print(colored("✓ Email configuration verified", "green"))
-        else:
-            print(colored("WARNING: Email configuration failed", "yellow"))
+        # Temporarily disable email test
+        # print(colored("Testing email configuration...", "yellow"))
+        # test_result = send_email(
+        #     EMAIL_CONFIG["YOUR_EMAIL"],
+        #     "AI Assistant Test Email",
+        #     "Your AI Assistant email configuration is working correctly."
+        # )
+        # if test_result:
+        #     print(colored("✓ Email configuration verified", "green"))
+        # else:
+        #     print(colored("WARNING: Email configuration failed", "yellow"))
             
     except Exception as e:
         print(colored(f"Startup Error: {str(e)}", "red"))
