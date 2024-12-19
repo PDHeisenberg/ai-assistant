@@ -2,6 +2,8 @@
 const blob = document.getElementById('blob');
 const muteBtn = document.getElementById('muteBtn');
 const closeBtn = document.getElementById('closeBtn');
+const leftEye = document.querySelector('.eye-left');
+const rightEye = document.querySelector('.eye-right');
 
 // State
 let isConnected = false;
@@ -319,6 +321,57 @@ function handleFunctionCall(functionCall) {
     }
 }
 
+// Eye Animations
+function animateEyes(state) {
+    anime.remove([leftEye, rightEye]);
+    
+    switch(state) {
+        case 'processing':
+            // Thinking expression - eyes looking up
+            anime({
+                targets: [leftEye, rightEye],
+                translateY: -4,
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            break;
+            
+        case 'speaking':
+            // Happy expression - curved eyes
+            anime({
+                targets: [leftEye, rightEye],
+                height: 12,
+                translateY: 0,
+                borderRadius: '50%',
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            break;
+            
+        case 'error':
+            // Sad expression - eyes looking down
+            anime({
+                targets: [leftEye, rightEye],
+                translateY: 4,
+                height: 14,
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+            break;
+            
+        default:
+            // Normal state - reset eyes
+            anime({
+                targets: [leftEye, rightEye],
+                translateY: 0,
+                height: 16,
+                borderRadius: '50%',
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+    }
+}
+
 // Blob Animation
 function animateBlob(isActive = false) {
     // Stop any existing animations
@@ -335,6 +388,7 @@ function animateBlob(isActive = false) {
             loop: true,
             easing: 'easeInOutSine'
         });
+        animateEyes('processing');
     } else if (isActive) {
         // Speaking animation
         anime({
@@ -345,6 +399,7 @@ function animateBlob(isActive = false) {
             loop: true,
             easing: 'easeInOutQuad'
         });
+        animateEyes('speaking');
     } else {
         // Reset to default state
         anime({
@@ -354,14 +409,19 @@ function animateBlob(isActive = false) {
             duration: 300,
             easing: 'easeOutQuad'
         });
+        animateEyes('default');
     }
 }
 
 // Error Animation
 function showError() {
     blob.style.background = '#dc2626';
+    animateEyes('error');
     setTimeout(() => {
         blob.style.background = '#9333ea';
+        if (!isProcessing) {
+            animateEyes('default');
+        }
     }, 1000);
 }
 

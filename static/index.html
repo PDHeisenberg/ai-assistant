@@ -42,8 +42,39 @@
             height: min(120px, 30vw);
             background: #9333ea;
             border-radius: 50%;
-            filter: blur(8px);
+            filter: blur(4px);
             transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .blob-eyes {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 30%;
+            z-index: 2;
+            filter: none;
+            pointer-events: none;
+        }
+        
+        .eye {
+            position: absolute;
+            width: 6px;
+            height: 16px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            filter: none;
+            transform-origin: center;
+        }
+        
+        .eye-left {
+            left: 35%;
+        }
+        
+        .eye-right {
+            right: 35%;
         }
         
         .controls {
@@ -89,7 +120,12 @@
 </head>
 <body>
     <div class="blob-container">
-        <div id="blob" class="floating"></div>
+        <div id="blob" class="floating">
+            <div class="blob-eyes">
+                <div class="eye eye-left"></div>
+                <div class="eye eye-right"></div>
+            </div>
+        </div>
     </div>
     
     <div class="controls">
