@@ -737,40 +737,42 @@ function sendMessage(message) {
     }
 }
 
+// Initialize microphone access
+async function initializeMicrophone() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone access granted');
+        setupWebRTC(stream);
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+        alert('Please allow microphone access to use the assistant.');
+    }
+}
+
 // Event Listeners
 muteBtn.addEventListener('click', () => {
-    try {
-        isMuted = !isMuted;
-        muteBtn.style.opacity = isMuted ? '0.3' : '0.5';
-        
-        if (peerConnection) {
-            const senders = peerConnection.getSenders();
-            const audioSender = senders.find(sender => sender.track?.kind === 'audio');
-            if (audioSender && audioSender.track) {
-                audioSender.track.enabled = !isMuted;
-                console.log("Microphone " + (isMuted ? "muted" : "unmuted"));
-            }
+    isMuted = !isMuted;
+    if (peerConnection) {
+        const senders = peerConnection.getSenders();
+        const audioSender = senders.find(sender => sender.track?.kind === 'audio');
+        if (audioSender) {
+            audioSender.track.enabled = !isMuted;
         }
-    } catch (error) {
-        console.error("Error toggling mute:", error);
     }
+    muteBtn.style.opacity = isMuted ? 0.3 : 0.8;
 });
 
 closeBtn.addEventListener('click', () => {
-    try {
-        if (peerConnection) {
-            peerConnection.close();
-            console.log("WebRTC connection closed");
-        }
-        window.close();
-    } catch (error) {
-        console.error("Error closing connection:", error);
-        window.close();
+    if (peerConnection) {
+        peerConnection.close();
     }
+    window.close();
 });
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing assistant...');
+    initializeMicrophone();
     // Initialize Lottie player
     blob.addEventListener('load', () => {
         console.log("Lottie animation loaded");
