@@ -11,6 +11,7 @@ let isMuted = false;
 let isProcessing = false;
 let peerConnection = null;
 let dataChannel = null;
+let isLottieReady = false;
 
 // Assistant Configuration
 const SYSTEM_INSTRUCTIONS = `You are Parth Dhawan's personal AI assistant. You represent Parth, who is a Product Designer with over a decade of experience, currently working as a Team Lead at Grab in Singapore.
@@ -403,30 +404,40 @@ function animateEyes(state) {
 
 // Blob Animation
 function animateBlob(isActive = false) {
-    if (isProcessing) {
-        // Loading/Processing animation
-        blob.play();
-        blob.setSpeed(1.5);
-    } else if (isActive) {
-        // Speaking animation
-        blob.play();
-        blob.setSpeed(1);
-    } else {
-        // Reset to default state
-        blob.pause();
-        // Set to first frame
-        blob.seek(0);
+    if (!isLottieReady) return;
+    
+    try {
+        if (isProcessing) {
+            // Loading/Processing animation
+            blob.play();
+            blob.setAttribute('speed', '1.5');
+        } else if (isActive) {
+            // Speaking animation
+            blob.play();
+            blob.setAttribute('speed', '1');
+        } else {
+            // Reset to default state
+            blob.stop();
+        }
+    } catch (error) {
+        console.error('Error animating blob:', error);
     }
 }
 
 // Error Animation
 function showError() {
-    blob.setSpeed(2);
-    setTimeout(() => {
-        if (!isProcessing) {
-            blob.setSpeed(1);
-        }
-    }, 1000);
+    if (!isLottieReady) return;
+    
+    try {
+        blob.setAttribute('speed', '2');
+        setTimeout(() => {
+            if (!isProcessing && isLottieReady) {
+                blob.setAttribute('speed', '1');
+            }
+        }, 1000);
+    } catch (error) {
+        console.error('Error showing error animation:', error);
+    }
 }
 
 // Constants
@@ -761,11 +772,15 @@ closeBtn.addEventListener('click', () => {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Lottie player
-    blob.addEventListener('ready', () => {
+    blob.addEventListener('load', () => {
         console.log("Lottie animation loaded");
-        // Pause initially
-        blob.pause();
-        blob.seek(0);
+        isLottieReady = true;
+        // Start in paused state
+        blob.stop();
+    });
+    
+    blob.addEventListener('error', (error) => {
+        console.error("Error loading Lottie animation:", error);
     });
     
     // Start WebRTC connection
