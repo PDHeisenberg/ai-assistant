@@ -20,7 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            background: transparent;
+            background: rgb(255, 255, 255);
             font-family: system-ui, -apple-system, sans-serif;
             overflow: hidden;
         }
@@ -48,8 +48,9 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-            mix-blend-mode: normal;
-            background: transparent !important;
+            color-profile: sRGB;
+            color-rendering: optimizeQuality;
+            shape-rendering: geometricPrecision;
         }
         
         .controls {
@@ -93,9 +94,8 @@
             loop
             autoplay
             preserveAspectRatio="xMidYMid meet"
-            mode="normal"
             renderer="svg"
-            style="background: transparent;">
+            style="color-interpolation: linearRGB; color-interpolation-filters: linearRGB;">
         </lottie-player>
     </div>
     
