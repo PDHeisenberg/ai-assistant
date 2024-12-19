@@ -20,7 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            background: #1a1a1a;
+            background: white;
             font-family: system-ui, -apple-system, sans-serif;
             overflow: hidden;
         }
@@ -37,9 +37,6 @@
             width: 100%;
             padding: 20px;
             position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            margin: 20px;
         }
         
         lottie-player {
@@ -81,7 +78,7 @@
         .btn svg {
             width: min(24px, 6vw);
             height: min(24px, 6vw);
-            stroke: white;
+            stroke: black;
         }
     </style>
 </head>
@@ -89,10 +86,9 @@
     <div class="blob-container">
         <lottie-player 
             id="blob"
-            src="/static/blob.json" 
+            src="https://cdn.lottielab.com/l/9Z59mLbw8LC1T6.json" 
             background="transparent"
             speed="1"
-            style="filter: brightness(1.2) contrast(1.2);"
             loop
             autoplay
             renderer="svg">
@@ -118,29 +114,15 @@
             if (blob) {
                 blob.addEventListener('error', (e) => {
                     console.error('Error loading animation:', e);
-                    document.querySelector('.blob-container').style.background = 'red';
                 });
                 
                 blob.addEventListener('ready', () => {
                     console.log('Animation loaded successfully');
-                    blob.play();
                 });
 
                 blob.addEventListener('load', () => {
                     console.log('Animation loaded');
                 });
-
-                // Force play after a short delay
-                setTimeout(() => {
-                    if (blob.getLottie) {
-                        const animation = blob.getLottie();
-                        if (animation) {
-                            animation.play();
-                        }
-                    }
-                }, 1000);
-            } else {
-                console.error('Blob element not found');
             }
         });
     </script>
