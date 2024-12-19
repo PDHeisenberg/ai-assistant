@@ -48,9 +48,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-            color-profile: sRGB;
-            color-rendering: optimizeQuality;
-            shape-rendering: geometricPrecision;
+            mix-blend-mode: multiply;
+            filter: saturate(1.2) brightness(1.1);
         }
         
         .controls {
@@ -95,7 +94,7 @@
             autoplay
             preserveAspectRatio="xMidYMid meet"
             renderer="svg"
-            style="color-interpolation: linearRGB; color-interpolation-filters: linearRGB;">
+            style="mix-blend-mode: multiply; filter: saturate(1.2) brightness(1.1);">
         </lottie-player>
     </div>
     
