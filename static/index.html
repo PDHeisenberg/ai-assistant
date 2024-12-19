@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Assistant</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.lottielab.com/s/lottie-player@1.x/player-web.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -37,59 +38,11 @@
             padding: 20px;
         }
         
-        #blob {
-            width: min(120px, 30vw);
-            height: min(120px, 30vw);
-            background: #9333ea;
-            border-radius: 50%;
-            filter: blur(2px);
-            transition: transform 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .blob-eyes {
-            position: absolute;
-            width: 70%;
-            height: 40%;
-            z-index: 2;
-            filter: none;
-            pointer-events: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .eye {
-            width: 12px;
-            height: 12px;
-            background: #000;
-            border-radius: 50%;
-            filter: none;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .eye::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            border-radius: 50%;
-            transform: scale(0.5);
-        }
-        
-        .eye-left {
-            margin-left: 15px;
-        }
-        
-        .eye-right {
-            margin-right: 15px;
+        lottie-player {
+            width: min(200px, 50vw);
+            height: min(200px, 50vw);
+            cursor: pointer;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
         }
         
         .controls {
@@ -121,26 +74,15 @@
             height: min(24px, 6vw);
             stroke: black;
         }
-        
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0px); }
-        }
-        
-        .floating {
-            animation: float 3s ease-in-out infinite;
-        }
     </style>
 </head>
 <body>
     <div class="blob-container">
-        <div id="blob" class="floating">
-            <div class="blob-eyes">
-                <div class="eye eye-left"></div>
-                <div class="eye eye-right"></div>
-            </div>
-        </div>
+        <lottie-player 
+            id="blob"
+            src="https://cdn.lottielab.com/l/CvwU7fnRPGbX7Q.json" 
+            loop>
+        </lottie-player>
     </div>
     
     <div class="controls">

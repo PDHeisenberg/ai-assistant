@@ -403,53 +403,28 @@ function animateEyes(state) {
 
 // Blob Animation
 function animateBlob(isActive = false) {
-    // Stop any existing animations
-    anime.remove(blob);
-    
     if (isProcessing) {
         // Loading/Processing animation
-        anime({
-            targets: '#blob',
-            scale: [1, 1.2],
-            opacity: [0.5, 1],
-            duration: 800,
-            direction: 'alternate',
-            loop: true,
-            easing: 'easeInOutSine'
-        });
-        animateEyes('processing');
+        blob.play();
+        blob.setSpeed(1.5);
     } else if (isActive) {
         // Speaking animation
-        anime({
-            targets: '#blob',
-            scale: [1, 1.05],
-            duration: 600,
-            direction: 'alternate',
-            loop: true,
-            easing: 'easeInOutQuad'
-        });
-        animateEyes('speaking');
+        blob.play();
+        blob.setSpeed(1);
     } else {
         // Reset to default state
-        anime({
-            targets: '#blob',
-            scale: 1,
-            opacity: 1,
-            duration: 300,
-            easing: 'easeOutQuad'
-        });
-        animateEyes('default');
+        blob.pause();
+        // Set to first frame
+        blob.seek(0);
     }
 }
 
 // Error Animation
 function showError() {
-    blob.style.background = '#dc2626';
-    animateEyes('error');
+    blob.setSpeed(2);
     setTimeout(() => {
-        blob.style.background = '#9333ea';
         if (!isProcessing) {
-            animateEyes('default');
+            blob.setSpeed(1);
         }
     }, 1000);
 }
@@ -785,5 +760,14 @@ closeBtn.addEventListener('click', () => {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lottie player
+    blob.addEventListener('ready', () => {
+        console.log("Lottie animation loaded");
+        // Pause initially
+        blob.pause();
+        blob.seek(0);
+    });
+    
+    // Start WebRTC connection
     initWebRTCWithRetry();
 }); 
