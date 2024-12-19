@@ -114,8 +114,15 @@ async def create_session():
     try:
         print(colored("Creating new realtime session...", "yellow"))
         api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            error_msg = "OpenAI API key not found in environment variables"
+            print(colored(error_msg, "red"))
+            raise HTTPException(status_code=500, detail=error_msg)
         
-        async with httpx.AsyncClient() as client:
+        print(colored(f"Using model: {MODEL}", "cyan"))
+        print(colored(f"Using voice: {VOICE}", "cyan"))
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{API_BASE}/realtime/sessions",
                 headers={
@@ -128,14 +135,25 @@ async def create_session():
                 }
             )
             
+            response_json = response.json()
+            print(colored(f"API Response: {json.dumps(response_json, indent=2)}", "cyan"))
+            
             if response.status_code != 200:
                 error_msg = f"OpenAI API error: {response.text}"
                 print(colored(error_msg, "red"))
                 raise HTTPException(status_code=response.status_code, detail=error_msg)
             
             print(colored("✓ Session created successfully", "green"))
-            return JSONResponse(content=response.json())
+            return JSONResponse(content=response_json)
             
+    except httpx.TimeoutException:
+        error_msg = "Request timed out while connecting to OpenAI API"
+        print(colored(error_msg, "red"))
+        raise HTTPException(status_code=504, detail=error_msg)
+    except httpx.RequestError as e:
+        error_msg = f"Network error occurred: {str(e)}"
+        print(colored(error_msg, "red"))
+        raise HTTPException(status_code=502, detail=error_msg)
     except Exception as e:
         error_msg = f"Session creation error: {str(e)}"
         print(colored(error_msg, "red"))
