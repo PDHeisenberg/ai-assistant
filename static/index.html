@@ -40,8 +40,8 @@
         }
         
         lottie-player {
-            width: 200px;
-            height: 200px;
+            width: 360px;
+            height: 360px;
             cursor: pointer;
             filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
             position: absolute;
@@ -49,6 +49,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
+            color-interpolation-filters: sRGB;
+            color-rendering: optimizeQuality;
         }
         
         .controls {
