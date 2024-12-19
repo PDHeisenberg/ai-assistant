@@ -6,6 +6,7 @@ const closeBtn = document.getElementById('closeBtn');
 // State
 let isConnected = false;
 let isMuted = false;
+let isProcessing = false;
 let peerConnection = null;
 let dataChannel = null;
 
@@ -323,8 +324,19 @@ function animateBlob(isActive = false) {
     // Stop any existing animations
     anime.remove(blob);
     
-    if (isActive) {
-        // Gentle pulsing animation when speaking
+    if (isProcessing) {
+        // Loading/Processing animation
+        anime({
+            targets: '#blob',
+            scale: [1, 1.2],
+            opacity: [0.5, 1],
+            duration: 800,
+            direction: 'alternate',
+            loop: true,
+            easing: 'easeInOutSine'
+        });
+    } else if (isActive) {
+        // Speaking animation
         anime({
             targets: '#blob',
             scale: [1, 1.05],
@@ -338,6 +350,7 @@ function animateBlob(isActive = false) {
         anime({
             targets: '#blob',
             scale: 1,
+            opacity: 1,
             duration: 300,
             easing: 'easeOutQuad'
         });
@@ -352,10 +365,41 @@ function showError() {
     }, 1000);
 }
 
+// Constants
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
+
+// Initialize WebRTC with retry logic
+async function initWebRTCWithRetry(retryCount = 0) {
+    try {
+        await initWebRTC();
+    } catch (error) {
+        console.error(`Connection attempt ${retryCount + 1} failed:`, error);
+        
+        if (retryCount < MAX_RETRIES) {
+            console.log(`Retrying in ${RETRY_DELAY/1000} seconds...`);
+            isProcessing = true;
+            animateBlob();
+            
+            setTimeout(() => {
+                initWebRTCWithRetry(retryCount + 1);
+            }, RETRY_DELAY);
+        } else {
+            console.error("Max retries reached. Connection failed.");
+            isProcessing = false;
+            animateBlob();
+            showError();
+            alert("Could not establish connection. Please refresh the page to try again.");
+        }
+    }
+}
+
 // Initialize WebRTC
 async function initWebRTC() {
     try {
         console.log("Initializing WebRTC connection...");
+        isProcessing = true;
+        animateBlob();
         
         // First check if we have microphone permission
         try {
@@ -456,37 +500,8 @@ async function initWebRTC() {
 
         // Set up data channel
         dataChannel = peerConnection.createDataChannel("oai-events");
+        setupDataChannel();
         
-        dataChannel.onopen = () => {
-            console.log("Data channel opened");
-            
-            // Update session with instructions and tools
-            sendMessage({
-                type: "session.update",
-                session: {
-                    instructions: SYSTEM_INSTRUCTIONS,
-                    tools: TOOLS,
-                    tool_choice: "auto"
-                }
-            });
-            
-            // Send initial response create with a greeting
-            sendMessage({
-                type: "response.create",
-                response: {
-                    modalities: ["text", "speech"],
-                    instructions: "Greet the user with your introduction message as specified in the system instructions."
-                }
-            });
-        };
-        
-        dataChannel.onclose = () => console.log("Data channel closed");
-        dataChannel.onerror = (error) => {
-            console.error("Data channel error:", error);
-            showError();
-        };
-        dataChannel.onmessage = handleServerMessage;
-
         // Create and set local description
         console.log("Creating offer...");
         const offer = await peerConnection.createOffer();
@@ -523,13 +538,66 @@ async function initWebRTC() {
         console.log("Remote description set");
 
         isConnected = true;
+        isProcessing = false;
+        animateBlob();
         console.log("WebRTC connection established successfully");
 
     } catch (error) {
         console.error("WebRTC initialization failed:", error);
+        isProcessing = false;
+        animateBlob();
         showError();
         alert(error.message || "Failed to initialize voice assistant. Please try again.");
     }
+}
+
+// Setup data channel handlers
+function setupDataChannel() {
+    if (!dataChannel) return;
+    
+    dataChannel.onopen = () => {
+        console.log("Data channel opened");
+        isProcessing = false;
+        animateBlob();
+        
+        // Update session with instructions and tools
+        sendMessage({
+            type: "session.update",
+            session: {
+                instructions: SYSTEM_INSTRUCTIONS,
+                tools: TOOLS,
+                tool_choice: "auto"
+            }
+        });
+        
+        // Send initial response create with a greeting
+        sendMessage({
+            type: "response.create",
+            response: {
+                modalities: ["text", "speech"],
+                instructions: "Greet the user with your introduction message as specified in the system instructions."
+            }
+        });
+    };
+    
+    dataChannel.onclose = () => {
+        console.log("Data channel closed");
+        if (isConnected) {
+            console.log("Attempting to reconnect...");
+            isProcessing = true;
+            animateBlob();
+            initWebRTCWithRetry();
+        }
+    };
+    
+    dataChannel.onerror = (error) => {
+        console.error("Data channel error:", error);
+        isProcessing = false;
+        animateBlob();
+        showError();
+    };
+    
+    dataChannel.onmessage = handleServerMessage;
 }
 
 // Handle messages from the server
@@ -540,15 +608,24 @@ function handleServerMessage(event) {
         
         switch(data.type) {
             case "speech.start":
+                isProcessing = false;
                 animateBlob(true);
                 break;
             case "speech.end":
                 animateBlob(false);
                 break;
             case "error":
+                isProcessing = false;
+                animateBlob();
                 showError();
                 break;
+            case "response.create":
+                isProcessing = true;
+                animateBlob();
+                break;
             case "response.done":
+                isProcessing = false;
+                animateBlob();
                 // Check for function calls in the response
                 const functionCall = data.response?.output?.find(item => item.type === "function_call");
                 if (functionCall) {
@@ -558,6 +635,8 @@ function handleServerMessage(event) {
         }
     } catch (error) {
         console.error("Error handling server message:", error);
+        isProcessing = false;
+        animateBlob();
     }
 }
 
@@ -565,13 +644,21 @@ function handleServerMessage(event) {
 function sendMessage(message) {
     try {
         if (dataChannel && dataChannel.readyState === "open") {
+            if (message.type === "response.create") {
+                isProcessing = true;
+                animateBlob();
+            }
             dataChannel.send(JSON.stringify(message));
             console.log("Message sent:", message.type);
         } else {
             console.warn("Data channel not ready, message not sent");
+            isProcessing = false;
+            animateBlob();
         }
     } catch (error) {
         console.error("Error sending message:", error);
+        isProcessing = false;
+        animateBlob();
     }
 }
 
@@ -608,4 +695,6 @@ closeBtn.addEventListener('click', () => {
 });
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initWebRTC); 
+document.addEventListener('DOMContentLoaded', () => {
+    initWebRTCWithRetry();
+}); 
