@@ -51,6 +51,11 @@
             z-index: 10;
         }
         
+        /* Hide specific matrix transform */
+        lottie-player svg g[transform*="1.229508161544799"] {
+            display: none !important;
+        }
+        
         .controls {
             width: 100%;
             padding: 2rem;
