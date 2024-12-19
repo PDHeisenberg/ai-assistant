@@ -5,4 +5,10 @@ openai
 termcolor
 websockets
 python-multipart
-httpx 
+httpx
+pydantic
+aiohttp
+asyncio
+tenacity
+python-jose[cryptography]
+passlib[bcrypt] 
