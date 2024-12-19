@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Assistant</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <style>
         * {
             margin: 0;
@@ -39,7 +38,7 @@
             position: relative;
         }
         
-        lottie-player {
+        .blob {
             width: 200px;
             height: 200px;
             cursor: pointer;
@@ -49,16 +48,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
-        }
-        
-        /* Hide watermark */
-        lottie-player svg g[transform*="matrix(1.229508161544799"] {
-            display: none !important;
-        }
-        
-        /* Hide specific text path */
-        lottie-player svg path[d*="M351.34320068359375"] {
-            display: none !important;
+            object-fit: contain;
         }
         
         .controls {
@@ -94,16 +84,11 @@
 </head>
 <body>
     <div class="blob-container">
-        <lottie-player 
+        <img 
             id="blob"
-            src="https://cdn.lottielab.com/l/9Z59mLbw8LC1T6.json" 
-            background="transparent"
-            speed="1"
-            loop
-            autoplay
-            renderer="svg"
-            style="display: block;">
-        </lottie-player>
+            src="/blob.gif" 
+            alt="Animated blob"
+            class="blob">
     </div>
     
     <div class="controls">
@@ -124,15 +109,11 @@
             const blob = document.querySelector('#blob');
             if (blob) {
                 blob.addEventListener('error', (e) => {
-                    console.error('Error loading animation:', e);
+                    console.error('Error loading blob GIF:', e);
                 });
                 
-                blob.addEventListener('ready', () => {
-                    console.log('Animation loaded successfully');
-                });
-
                 blob.addEventListener('load', () => {
-                    console.log('Animation loaded');
+                    console.log('Blob GIF loaded successfully');
                 });
             }
         });
