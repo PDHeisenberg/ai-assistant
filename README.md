@@ -18,6 +18,18 @@ A voice-based AI assistant that can discuss my work experience, take messages, a
 - Email: SMTP with SSL
 - Deployment: Netlify
 
+## Try it instantly on the web
+
+You can spin up your own copy of the assistant with a single click using Netlify's
+starter workflow:
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/parthdhawan/ai-assistant)
+
+After the site is created, open the **Site configuration → Environment variables**
+panel in Netlify and add the required keys listed below. Once saved, trigger a
+deploy and you'll receive a publicly accessible URL where you can test the
+assistant in your browser.
+
 ## Local Development
 
 1. Clone the repository:
