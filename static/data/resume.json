@@ -1,0 +1,95 @@
+{
+  "name": "Parth Dhawan",
+  "title": "Principal Product Designer",
+  "location": "Singapore",
+  "summary": "Principal Product Designer with 12+ years of end-to-end product design experience across mobility, travel, and commerce. Skilled at leading multidisciplinary teams to ship high-impact experiences that grow revenue and delight users.",
+  "contact": "parthdhawan28@gmail.com",
+  "current_role": {
+    "company": "Grab",
+    "role": "Principal Product Designer & Team Lead, Omni Commerce",
+    "start": "2021",
+    "achievements": [
+      "Leading Omni Commerce design across Southeast Asia, partnering with product and engineering leads to shape affordability and loyalty programs.",
+      "Scaled the Offers & More ecosystem to 28M monthly active users, driving a double-digit lift in deal redemption.",
+      "Reimagined Group Orders with multi-platform parity, increasing repeat conversion by 18% and reducing time-to-order by 25%."
+    ]
+  },
+  "experience": [
+    {
+      "company": "Grab",
+      "role": "Principal Product Designer & Team Lead, Omni Commerce",
+      "start": "2021",
+      "end": "Present",
+      "location": "Singapore",
+      "highlights": [
+        "Owning the design vision for affordability, loyalty, and subscription surfaces across GrabFood and GrabMart.",
+        "Established the design ops and research rituals for a 12-person product squad spanning Singapore, Jakarta, and Ho Chi Minh City.",
+        "Launched cross-vertical offer personalization that improved incremental GMV by 9%."
+      ]
+    },
+    {
+      "company": "Grab",
+      "role": "Lead Product Designer, Deliveries Experience",
+      "start": "2019",
+      "end": "2021",
+      "location": "Singapore",
+      "highlights": [
+        "Redesigned the end-to-end Group Orders flow, unlocking a 2.3x increase in shared cart creation.",
+        "Introduced smart upsell and bundling tactics that lifted basket size by 14% while improving NPS by 6 points.",
+        "Mentored junior designers across GrabFood, GrabMart, and GrabKitchen." 
+      ]
+    },
+    {
+      "company": "Agoda",
+      "role": "Senior Product Designer, Cart & Trip Planning",
+      "start": "2017",
+      "end": "2019",
+      "location": "Bangkok",
+      "highlights": [
+        "Led the design of carted travel itineraries for multi-destination trips, improving attach rate by 22%.",
+        "Delivered a shared trip planner across web and app that supported 15 languages and 12 currencies.",
+        "Paired with data science to craft experimentation dashboards that reduced validation time from weeks to days."
+      ]
+    },
+    {
+      "company": "Flipkart",
+      "role": "Product Designer, Growth & Grocery",
+      "start": "2015",
+      "end": "2017",
+      "location": "Bengaluru",
+      "highlights": [
+        "Owned design for Flipkart Supermart's MVP through nationwide launch, covering inventory discovery, replenishment, and subscription.",
+        "Built advertiser self-serve tooling adopted by 3K+ sellers within six months.",
+        "Pioneered an experimentation framework that cut design-to-dev handoff by 30%."
+      ]
+    },
+    {
+      "company": "PepperTap",
+      "role": "UX Designer",
+      "start": "2014",
+      "end": "2015",
+      "location": "Gurugram",
+      "highlights": [
+        "Designed order tracking and substitution workflows that helped scale the service from 2K to 50K orders per day.",
+        "Instituted field research loops with store pickers, reducing item substitution complaints by 40%."
+      ]
+    }
+  ],
+  "skills": [
+    "Product strategy",
+    "End-to-end UX",
+    "Design leadership",
+    "Service design",
+    "Rapid prototyping",
+    "Mixed-methods research",
+    "Design systems",
+    "Experimentation"
+  ],
+  "education": [
+    {
+      "school": "Pearl Academy of Design",
+      "program": "B.A. (Hons) Communication Design",
+      "end": "2013"
+    }
+  ]
+}
