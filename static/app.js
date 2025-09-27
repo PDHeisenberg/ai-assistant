@@ -3,6 +3,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 2000;
 const CONNECTION_TIMEOUT = 30000;
 const HEARTBEAT_INTERVAL = 30000;
+const VOICE = "alloy";
 
 // State Management
 class ConnectionState {
@@ -16,15 +17,27 @@ class ConnectionState {
         this.isLottieReady = false;
         this.heartbeatInterval = null;
         this.connectionTimeout = null;
+        this.resumeProfile = null;
+        this.instructions = "";
+        this.speechRecognizer = null;
+        this.shouldRestartRecognition = false;
+        this.subtitleTimeout = null;
     }
 
-    reset() {
+    reset(options = {}) {
+        const { preserveProfile = true } = options;
         this.isConnected = false;
         this.isProcessing = false;
         this.peerConnection = null;
         this.dataChannel = null;
         this.reconnectAttempts = 0;
         this.clearTimers();
+
+        if (!preserveProfile) {
+            this.resumeProfile = null;
+            this.instructions = "";
+        }
+        this.stopSpeechRecognition();
     }
 
     clearTimers() {
@@ -36,6 +49,24 @@ class ConnectionState {
             clearTimeout(this.connectionTimeout);
             this.connectionTimeout = null;
         }
+    }
+
+    stopSpeechRecognition() {
+        if (this.speechRecognizer) {
+            this.shouldRestartRecognition = false;
+            try {
+                this.speechRecognizer.onend = null;
+                this.speechRecognizer.stop();
+            } catch (error) {
+                console.warn("Speech recognition stop error:", error);
+            }
+            this.speechRecognizer = null;
+        }
+        if (this.subtitleTimeout) {
+            clearTimeout(this.subtitleTimeout);
+            this.subtitleTimeout = null;
+        }
+        hideSubtitle();
     }
 }
 
@@ -50,43 +81,141 @@ const rightEye = document.querySelector('.eye-right');
 const statusIndicator = document.createElement('div');
 statusIndicator.className = 'status-indicator';
 document.body.appendChild(statusIndicator);
+const subtitleEl = document.getElementById('subtitle');
+
+// Profile helpers
+async function loadResumeProfile() {
+    try {
+        const response = await fetch('/static/data/resume.json', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`Failed to load resume (status ${response.status})`);
+        }
+        const profile = await response.json();
+        state.resumeProfile = profile;
+        state.instructions = buildSystemInstructions(profile);
+        console.info("Resume loaded successfully");
+    } catch (error) {
+        console.error("Unable to load resume profile:", error);
+        state.instructions = FALLBACK_INSTRUCTIONS;
+    }
+}
+
+const FALLBACK_INSTRUCTIONS = `You are Parth Dhawan's personal AI assistant. Keep the conversation focused on his product design background, portfolio, and availability. If someone asks about unrelated topics, politely steer them back to Parth's work or offer to take a message.`;
+
+function buildSystemInstructions(profile) {
+    if (!profile) {
+        return FALLBACK_INSTRUCTIONS;
+    }
+
+    const current = profile.current_role;
+    const currentHighlights = current?.achievements?.map((item, index) => `${index + 1}. ${item}`).join('\n    ');
+    const experienceSummary = (profile.experience || [])
+        .map(role => `- ${role.role} at ${role.company} (${role.start}${role.end ? ` – ${role.end}` : ''})${role.highlights?.length ? `: ${role.highlights[0]}` : ''}`)
+        .join('\n');
+    const skills = (profile.skills || []).join(', ');
+
+    return `You are ${profile.name}'s personal AI voice assistant. Always speak as Parth's representative and keep every response anchored to his product design career.\n\nRules:\n- Only discuss Parth's background, skills, availability, or the projects listed below.\n- Politely decline unrelated questions and guide the conversation back to his design practice.\n- Highlight that Parth is based in ${profile.location} and can be reached at ${profile.contact}.\n- Offer to capture a message when someone wants to follow up.\n\nCurrent role:\n- ${current?.role || ''} at ${current?.company || ''} (since ${current?.start || 'N/A'}). Key achievements:\n    ${currentHighlights || 'N/A'}\n\nCareer snapshot:\n${experienceSummary}\n\nCore skills: ${skills}\n\nTone guidelines:\n- Be confident, concise, and data-backed.\n- Mention measurable impact (conversion lifts, adoption, operational improvements).\n- When greeting, introduce yourself as Parth's AI assistant and explain you can share his work or take a message.`;
+}
+
+// Subtitle helpers
+function showSubtitle(text, { isFinal = false } = {}) {
+    if (!subtitleEl || !text) {
+        return;
+    }
+
+    subtitleEl.textContent = text;
+    subtitleEl.classList.add('visible');
+
+    if (state.subtitleTimeout) {
+        clearTimeout(state.subtitleTimeout);
+        state.subtitleTimeout = null;
+    }
+
+    if (isFinal) {
+        state.subtitleTimeout = setTimeout(() => hideSubtitle(), 1500);
+    }
+}
+
+function hideSubtitle() {
+    if (!subtitleEl) {
+        return;
+    }
+    subtitleEl.classList.remove('visible');
+    subtitleEl.textContent = '';
+    if (state.subtitleTimeout) {
+        clearTimeout(state.subtitleTimeout);
+        state.subtitleTimeout = null;
+    }
+}
+
+function initializeSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        console.warn('SpeechRecognition API is not supported in this browser.');
+        return;
+    }
+
+    if (state.speechRecognizer) {
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+            const result = event.results[i];
+            const transcript = result[0]?.transcript?.trim();
+            if (!transcript) continue;
+
+            if (result.isFinal) {
+                finalTranscript += `${transcript} `;
+            } else {
+                interimTranscript += `${transcript} `;
+            }
+        }
+
+        if (interimTranscript) {
+            showSubtitle(interimTranscript.trim(), { isFinal: false });
+        }
+
+        if (finalTranscript) {
+            showSubtitle(finalTranscript.trim(), { isFinal: true });
+        }
+    };
+
+    recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+    };
+
+    recognition.onend = () => {
+        if (state.shouldRestartRecognition) {
+            try {
+                recognition.start();
+            } catch (error) {
+                console.warn('Speech recognition restart error:', error);
+            }
+        } else {
+            hideSubtitle();
+        }
+    };
+
+    try {
+        recognition.start();
+        state.speechRecognizer = recognition;
+        state.shouldRestartRecognition = true;
+    } catch (error) {
+        console.warn('Speech recognition start failed:', error);
+    }
+}
 
 // Assistant Configuration
-const SYSTEM_INSTRUCTIONS = `You are Parth Dhawan's personal AI assistant. You represent Parth, who is a Product Designer with over a decade of experience, currently working as a Team Lead at Grab in Singapore.
-
-When someone says hi or hello, always introduce yourself with:
-"Hi! I'm Parth's AI assistant. I can tell you about his work as a Product Designer at companies like Grab and Agoda, or take a message for him. How can I help you today?"
-
-Your role is to:
-1. Share Parth's professional background:
-   - Currently leading Grab's Omni Commerce team
-   - Previously led successful projects like Offers & More and Group Orders at Grab
-   - Senior Product Designer at Agoda, working on Cart & Trip Planning
-   - Product Designer at Flipkart, launching Supermart and advertising platforms
-   - UX Designer at PepperTap, scaling from 2000 to 50,000 orders/day
-
-2. Take messages for Parth:
-   - Collect contact information and message details
-   - Note the urgency level
-   - Save all messages for later review
-
-3. Share specific project details:
-   - Recent work on affordability initiatives at Grab
-   - Trip planning experience at Agoda
-   - E-commerce platforms at Flipkart
-   - Growth projects at PepperTap
-
-4. Communication style:
-   - Be professional yet approachable
-   - Focus on concrete achievements and metrics
-   - Keep responses concise and natural
-   - Highlight relevant experience based on the question
-
-Important: 
-- Use save_message function when someone wants to leave a message
-- Use get_work_experience function when asked about experience, projects, or skills
-- Mention that Parth is based in Singapore and can be reached at parthdhawan28@gmail.com
-- Highlight that Parth specializes in end-to-end product design with expertise in research and prototyping`;
+const SYSTEM_INSTRUCTIONS = FALLBACK_INSTRUCTIONS;
 
 // Tools Configuration
 const TOOLS = [
@@ -166,7 +295,8 @@ async function initializeAssistant() {
     try {
         updateStatus('Initializing assistant...', 'info');
         state.reset();
-        
+        await loadResumeProfile();
+
         // Initialize Lottie
         if (blob) {
             blob.addEventListener('load', () => {
@@ -180,9 +310,9 @@ async function initializeAssistant() {
                 throw new AssistantError('Failed to load animations', 'animation');
             });
         }
-        
+
         await initializeWebRTC();
-        
+
     } catch (error) {
         handleError(error);
     }
@@ -193,16 +323,18 @@ async function initializeWebRTC() {
         updateStatus('Initializing connection...', 'info');
         state.isProcessing = true;
         animateBlob();
-        
+
         // Check microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true
             }
         });
-        
+
+        initializeSpeechRecognition();
+
         // Get session token
         const tokenResponse = await fetch("/.netlify/functions/session", {
             method: "POST",
@@ -230,11 +362,21 @@ async function initializeWebRTC() {
         state.peerConnection = new RTCPeerConnection({
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         });
-        
+
+        state.dataChannel = state.peerConnection.createDataChannel('oai-events');
+        state.dataChannel.onopen = handleDataChannelOpen;
+        state.dataChannel.onmessage = handleServerMessage;
+        state.dataChannel.onerror = (event) => {
+            console.error('Data channel error:', event);
+        };
+        state.dataChannel.onclose = () => {
+            console.log('Data channel closed');
+        };
+
         setupWebRTCHandlers();
         setupMediaStream(stream);
         await createAndSetOffer(data.client_secret.value);
-        
+
         // Setup connection monitoring
         setupConnectionMonitoring();
         
@@ -251,6 +393,15 @@ function setupWebRTCHandlers() {
 
     state.peerConnection.onicecandidate = event => {
         console.log("ICE candidate:", event.candidate);
+    };
+
+    state.peerConnection.ondatachannel = (event) => {
+        console.log('Received remote data channel');
+        if (!state.dataChannel) {
+            state.dataChannel = event.channel;
+            state.dataChannel.onopen = handleDataChannelOpen;
+            state.dataChannel.onmessage = handleServerMessage;
+        }
     };
 
     state.peerConnection.ontrack = e => {
@@ -336,11 +487,12 @@ function handleConnectionStateChange(iceState) {
 async function handleDisconnection() {
     state.isConnected = false;
     updateStatus('Connection lost', 'error');
-    
+    hideSubtitle();
+
     if (state.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         state.reconnectAttempts++;
         updateStatus(`Reconnecting (${state.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`, 'warning');
-        
+
         setTimeout(() => {
             initializeWebRTC();
         }, RECONNECT_DELAY * state.reconnectAttempts);
@@ -354,7 +506,7 @@ function handleError(error) {
     state.isProcessing = false;
     animateBlob();
     showError();
-    
+
     if (error.retryable && state.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         handleDisconnection();
     } else {
@@ -388,7 +540,7 @@ function handleServerMessage(event) {
     try {
         const data = JSON.parse(event.data);
         console.log("Received:", data.type);
-        
+
         switch(data.type) {
             case 'speech.start':
                 state.isProcessing = false;
@@ -396,6 +548,7 @@ function handleServerMessage(event) {
                 break;
             case 'speech.end':
                 animateBlob(false);
+                hideSubtitle();
                 break;
             case 'error':
                 handleError(new AssistantError(
@@ -403,6 +556,9 @@ function handleServerMessage(event) {
                     'server',
                     true
                 ));
+                break;
+            case 'conversation.item.created':
+                handleConversationItem(data.item);
                 break;
             case 'response.create':
                 state.isProcessing = true;
@@ -422,6 +578,62 @@ function handleServerMessage(event) {
     } catch (error) {
         handleError(error);
     }
+}
+
+function handleConversationItem(item) {
+    if (!item) return;
+    const isUserText = item.role === 'user' && Array.isArray(item.content);
+
+    if (isUserText) {
+        const textContent = item.content
+            .filter(part => part.type === 'input_text' || part.type === 'output_text')
+            .map(part => part.text)
+            .join(' ')
+            .trim();
+
+        if (textContent) {
+            const isFinal = item.status === 'completed' || item.status === 'complete';
+            showSubtitle(textContent, { isFinal });
+        }
+    }
+}
+
+function handleDataChannelOpen() {
+    console.log('Data channel open');
+    state.isConnected = true;
+    state.reconnectAttempts = 0;
+    updateStatus('Assistant ready', 'success');
+
+    const instructions = state.instructions || SYSTEM_INSTRUCTIONS;
+
+    sendMessage({
+        type: 'session.update',
+        session: {
+            instructions,
+            voice: VOICE,
+            modalities: ['text', 'audio'],
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16'
+        }
+    });
+
+    sendMessage({
+        type: 'session.update',
+        session: {
+            tools: TOOLS
+        }
+    });
+
+    sendMessage({
+        type: 'response.create',
+        response: {
+            instructions: 'Greet the user warmly, introduce yourself as Parth Dhawan\'s AI assistant, and offer to share his product design experience or take a message.'
+        }
+    });
+}
+
+function handleFunctionCall(functionCall) {
+    console.warn('Function call received but no handler implemented yet:', functionCall?.name);
 }
 
 // Animation Functions
@@ -469,10 +681,17 @@ muteBtn.addEventListener('click', () => {
         }
     }
     muteBtn.style.opacity = state.isMuted ? 0.3 : 0.8;
+
+    if (state.isMuted) {
+        state.stopSpeechRecognition();
+        hideSubtitle();
+    } else {
+        initializeSpeechRecognition();
+    }
 });
 
 closeBtn.addEventListener('click', () => {
-    state.reset();
+    state.reset({ preserveProfile: false });
     window.close();
 });
 

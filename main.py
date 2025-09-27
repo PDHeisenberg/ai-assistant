@@ -16,8 +16,8 @@ import asyncio
 from functools import wraps
 
 # Constants
-MODEL = "gpt-4o-realtime-preview-2024-12-17"
-VOICE = "verse"
+MODEL = "gpt-4o-realtime-preview-latest"
+VOICE = "alloy"
 API_BASE = "https://api.openai.com/v1"
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
